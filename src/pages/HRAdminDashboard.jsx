@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { MapPin, Users, Smartphone, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
+import { MapPin, Users, Smartphone, RefreshCw, Plus, CheckCircle2, Clock, Filter, Layers } from 'lucide-react';
 
 export default function HRAdminDashboard() {
   const { user } = useAuth();
   const [master, setMaster] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState('branch_hq');
+  const [deptFilter, setDeptFilter] = useState('ALL');
 
   // Geofence edit
   const [lat, setLat] = useState(-6.225012);
@@ -71,6 +72,10 @@ export default function HRAdminDashboard() {
 
   if (!master) return <div style={{ padding: '24px' }}>Memuat data master HR...</div>;
 
+  const filteredUsers = deptFilter === 'ALL'
+    ? master.users
+    : master.users.filter(u => u.department === deptFilter);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="glass-card" style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(18, 25, 41, 0.9))' }}>
@@ -80,7 +85,7 @@ export default function HRAdminDashboard() {
           </span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PT WajibAbsen Teknologi Nusantara</span>
         </div>
-        <h1 style={{ fontSize: '1.65rem' }}>Pusat Konfigurasi Master Data, Geofence & Perangkat</h1>
+        <h1 style={{ fontSize: '1.65rem' }}>Pusat Konfigurasi Master Data, Geofence & Smart Shift</h1>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
@@ -157,30 +162,65 @@ export default function HRAdminDashboard() {
           </form>
         </div>
 
-        {/* Shift Summary Box */}
+        {/* Shift Summary & Smart Auto-Shift Engine Box (REQ-SHF-02) */}
         <div className="glass-card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>Aturan Jam Kerja & Shift Aktif</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock color="#10B981" />
+              <span>Smart Auto-Shift Detection Engine</span>
+            </h3>
+            <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>AKTIF (REQ-SHF-02)</span>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            Sistem mencocokkan waktu kehadiran secara otomatis dengan jadwal terdekat tanpa intervensi manual harian.
+          </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {master.shifts.map(s => (
               <div key={s.id} style={{
                 padding: '14px',
                 borderRadius: '12px',
                 background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)'
+                border: '1px solid rgba(255,255,255,0.08)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
               }}>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{s.name}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Jam: {s.start_time} - {s.end_time} • Grace Period: {s.grace_period_minutes} Menit
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#6EE7B7' }}>{s.name}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    Jam: {s.start_time} - {s.end_time} • Grace Period: {s.grace_period_minutes} Menit
+                  </div>
                 </div>
+                <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>Auto-Matched</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Employee Master & Device Binding Table */}
+      {/* REQ-MAS-02: Department & Manager Hierarchy Filter */}
       <div className="glass-card" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>Master Karyawan & Status Pengikatan Perangkat (Device Binding)</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h3 style={{ fontSize: '1.2rem' }}>Master Karyawan & Status Pengikatan Perangkat (Device Binding)</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>REQ-MAS-02: Hierarki Organisasi & Manajemen Divisi</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Filter size={16} color="var(--text-muted)" />
+            <select
+              value={deptFilter}
+              onChange={e => setDeptFilter(e.target.value)}
+              style={{ padding: '8px 14px', borderRadius: '8px', background: '#121929', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', fontSize: '0.82rem' }}
+            >
+              <option value="ALL">Semua Departemen (All)</option>
+              <option value="Executive">Executive</option>
+              <option value="HR & People">HR & People</option>
+              <option value="Product & Engineering">Product & Engineering</option>
+              <option value="Finance & Accounting">Finance & Accounting</option>
+            </select>
+          </div>
+        </div>
+
         <div style={{ overflowX: 'auto' }}>
           <table className="premium-table">
             <thead>
@@ -194,7 +234,7 @@ export default function HRAdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {master.users.map(u => (
+              {filteredUsers.map(u => (
                 <tr key={u.id}>
                   <td style={{ fontWeight: 600 }}>{u.nik}</td>
                   <td>{u.full_name}</td>

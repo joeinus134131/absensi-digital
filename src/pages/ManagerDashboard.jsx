@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Users, CheckCircle2, XCircle, Clock, ShieldAlert, Check } from 'lucide-react';
+import { Users, CheckCircle2, XCircle, Clock, ShieldAlert, Check, MessageSquare } from 'lucide-react';
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
   const [teamLogs, setTeamLogs] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [rejectNote, setRejectNote] = useState({});
 
   const fetchTeamData = () => {
     fetch(`http://localhost:5001/api/attendance/logs?role=MANAGER&user_id=${user.id}`)
@@ -22,10 +23,16 @@ export default function ManagerDashboard() {
   }, [user]);
 
   const handleApprove = async (id, newStatus) => {
+    const note = rejectNote[id] || '';
     await fetch('http://localhost:5001/api/approvals/update-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ request_id: id, status: newStatus, approver_role: 'MANAGER' })
+      body: JSON.stringify({
+        request_id: id,
+        status: newStatus,
+        approver_role: user.role,
+        note
+      })
     });
     fetchTeamData();
   };
@@ -35,16 +42,22 @@ export default function ManagerDashboard() {
       <div className="glass-card" style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(18, 25, 41, 0.85))' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
           <span className="badge badge-info">MANAJER / SUPERVISOR</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Departemen: {user?.department}</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Departemen: {user?.department} • Multi-Level Approval Active</span>
         </div>
-        <h1 style={{ fontSize: '1.65rem' }}>Dasbor Pengawasan Tim & Approval Langsung</h1>
+        <h1 style={{ fontSize: '1.65rem' }}>Dasbor Pengawasan Tim & Multi-Level Approval Workflow</h1>
       </div>
 
       {/* Pending Approvals */}
       <div className="glass-card" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>
-          Menunggu Persetujuan Manajer ({requests.filter(r => r.status === 'PENDING_MANAGER').length})
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '1.2rem' }}>
+            Menunggu Persetujuan Manajer ({requests.filter(r => r.status === 'PENDING_MANAGER').length})
+          </h3>
+          <span className="badge badge-info" style={{ fontSize: '0.72rem' }}>
+            REQ-APP-02: Level 1 Manager Approval
+          </span>
+        </div>
+
         <div style={{ overflowX: 'auto' }}>
           <table className="premium-table">
             <thead>
@@ -52,8 +65,9 @@ export default function ManagerDashboard() {
                 <th>Karyawan</th>
                 <th>Jenis Pengajuan</th>
                 <th>Tanggal</th>
-                <th>Alasan</th>
+                <th>Alasan & Lampiran</th>
                 <th>Status</th>
+                <th>Catatan Review</th>
                 <th>Aksi Persetujuan</th>
               </tr>
             </thead>
@@ -66,11 +80,24 @@ export default function ManagerDashboard() {
                   </td>
                   <td><span className="badge badge-info">{reqItem.type}</span></td>
                   <td>{reqItem.start_date} s/d {reqItem.end_date}</td>
-                  <td>{reqItem.reason}</td>
+                  <td style={{ maxWidth: '240px' }}>{reqItem.reason}</td>
                   <td>
                     {reqItem.status === 'PENDING_MANAGER' && <span className="badge badge-warning">Pending Manager</span>}
                     {reqItem.status === 'APPROVED' && <span className="badge badge-success">Disetujui</span>}
                     {reqItem.status === 'REJECTED' && <span className="badge badge-danger">Ditolak</span>}
+                  </td>
+                  <td>
+                    {reqItem.status === 'PENDING_MANAGER' ? (
+                      <input
+                        type="text"
+                        placeholder="Catatan persetujuan/penolakan..."
+                        value={rejectNote[reqItem.id] || ''}
+                        onChange={e => setRejectNote({ ...rejectNote, [reqItem.id]: e.target.value })}
+                        style={{ padding: '6px 10px', borderRadius: '6px', background: '#121929', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.8rem' }}
+                      />
+                    ) : (
+                      <span>{reqItem.note || '-'}</span>
+                    )}
                   </td>
                   <td>
                     {reqItem.status === 'PENDING_MANAGER' && (

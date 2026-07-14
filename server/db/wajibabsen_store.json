@@ -262,6 +262,52 @@
       "late_minutes": 0,
       "is_early_leave": false,
       "status": "COMPLETED"
+    },
+    {
+      "id": "id_1784011536214_aeu57z",
+      "created_at": "2026-07-14T06:45:36.214Z",
+      "user_id": "usr_karyawan",
+      "branch_id": "branch_hq",
+      "shift_id": "shift_flex_01",
+      "date": "2026-07-14",
+      "check_in_time": "2026-07-14T06:45:36.213Z",
+      "check_out_time": null,
+      "check_in_method": "WIFI_BSSID_VERIFIED",
+      "latitude": -6.225012,
+      "longitude": 106.806034,
+      "distance_meters": 0,
+      "trust_score": 100,
+      "flags": [
+        "VERIFIED_GPS",
+        "VERIFIED_WIFI_BSSID",
+        "LATE_CHECK_IN"
+      ],
+      "is_late": true,
+      "late_minutes": 266,
+      "status": "CHECKED_IN"
+    },
+    {
+      "id": "id_1784011537354_9q3cqx",
+      "created_at": "2026-07-14T06:45:37.354Z",
+      "user_id": "usr_karyawan",
+      "branch_id": "branch_hq",
+      "shift_id": "shift_flex_01",
+      "date": "2026-07-14",
+      "check_in_time": "2026-07-14T06:45:37.354Z",
+      "check_out_time": null,
+      "check_in_method": "WIFI_BSSID_VERIFIED",
+      "latitude": -6.225012,
+      "longitude": 106.806034,
+      "distance_meters": 0,
+      "trust_score": 100,
+      "flags": [
+        "VERIFIED_GPS",
+        "VERIFIED_WIFI_BSSID",
+        "LATE_CHECK_IN"
+      ],
+      "is_late": true,
+      "late_minutes": 266,
+      "status": "CHECKED_IN"
     }
   ],
   "leave_requests": [
@@ -273,7 +319,11 @@
       "start_date": "2026-07-20",
       "end_date": "2026-07-22",
       "reason": "Acara pernikahan keluarga kandung di Bandung",
-      "status": "PENDING_MANAGER"
+      "status": "APPROVED",
+      "approved_by": "MANAGER",
+      "approved_at": "2026-07-14T06:49:23.740Z",
+      "notes": "",
+      "updated_at": "2026-07-14T06:49:23.740Z"
     },
     {
       "id": "req_002",
@@ -283,7 +333,11 @@
       "start_date": "2026-07-14",
       "end_date": "2026-07-14",
       "reason": "Persiapan Rilis Produk WajibAbsen V1 Enterprise",
-      "status": "PENDING_MANAGER"
+      "status": "APPROVED",
+      "approved_by": "MANAGER",
+      "approved_at": "2026-07-14T06:49:22.430Z",
+      "notes": "",
+      "updated_at": "2026-07-14T06:49:22.430Z"
     }
   ],
   "audit_logs": []
