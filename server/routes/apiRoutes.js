@@ -26,8 +26,12 @@ router.get('/attendance/logs', attCtrl.getAttendanceLogs);
 // HR Master & Config
 router.get('/hr/master', hrCtrl.getMasterData);
 router.post('/hr/employee', hrCtrl.createEmployee);
+router.post('/hr/shift', hrCtrl.createShift);
 router.post('/hr/branch-geofence', hrCtrl.updateBranchGeofence);
 router.post('/hr/reset-device', hrCtrl.resetUserDevice);
+
+// Audit Trail
+router.get('/audit/logs', hrCtrl.getAuditLogs);
 
 // Approvals
 router.get('/approvals/requests', appCtrl.getLeaveRequests);

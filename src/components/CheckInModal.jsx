@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { MapPin, QrCode, ShieldAlert, CheckCircle2, XCircle, Wifi, Navigation, WifiOff, ScanFace } from 'lucide-react';
+import { MapPin, QrCode, ShieldAlert, CheckCircle2, XCircle, Wifi, Navigation, WifiOff, ScanFace, X } from 'lucide-react';
 
 export default function CheckInModal({ onClose, onSuccess }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('GEO');
 
   // GEO Form State
-  const [latitude, setLatitude] = useState(-6.225010);
-  const [longitude, setLongitude] = useState(106.806030);
   const [simulatedDistance, setSimulatedDistance] = useState('INSIDE');
   const [isMockGps, setIsMockGps] = useState(false);
   const [wifiBssid, setWifiBssid] = useState('00:1A:2B:3C:4D:5E');
@@ -29,7 +27,6 @@ export default function CheckInModal({ onClose, onSuccess }) {
     const targetLat = simulatedDistance === 'OUTSIDE' ? -6.229500 : -6.225012;
     const targetLng = simulatedDistance === 'OUTSIDE' ? 106.812000 : 106.806034;
 
-    // USP-5: Offline-First Local Queue handling
     if (isOfflineMode) {
       setTimeout(() => {
         const offlineQueue = JSON.parse(localStorage.getItem('wajibabsen_offline_queue') || '[]');
@@ -48,7 +45,7 @@ export default function CheckInModal({ onClose, onSuccess }) {
         setResult({
           success: true,
           is_offline: true,
-          message: `Absensi tersimpan aman di Antrean Offline (IndexedDB/Local Queue). Akan disinkronisasikan otomatis saat jaringan pulih.`,
+          message: 'Absensi tersimpan di antrean offline. Akan disinkronkan saat koneksi pulih.',
           trust_score: 95
         });
         if (onSuccess) onSuccess();
@@ -99,7 +96,7 @@ export default function CheckInModal({ onClose, onSuccess }) {
           cycle_timestamp: Math.floor(Date.now() / 1000) - 60,
           signature: 'TOTP_EXPIRED_SIGNATURE'
         };
-        tokenToSend = Buffer.from(JSON.stringify(fakePayload)).toString('base64');
+        tokenToSend = btoa(JSON.stringify(fakePayload));
       }
 
       const res = await fetch('http://localhost:5001/api/qr/scan', {
@@ -123,108 +120,106 @@ export default function CheckInModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(4, 10, 20, 0.88)',
-      backdropFilter: 'blur(10px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '20px'
-    }}>
-      <div className="glass-card" style={{ width: '100%', maxWidth: '600px', padding: '28px', position: 'relative' }}>
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-content" style={{ maxWidth: '560px' }}>
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <h3 style={{ fontSize: '1.35rem' }}>Check-In Kehadiran ({user.full_name})</h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Pilih metode kehadiran sesuai standar keamanan platform WajibAbsen
+            <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)' }}>Check-In Kehadiran</h3>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Pilih metode yang sesuai untuk mencatat kehadiran Anda
             </p>
           </div>
-          <button onClick={onClose} className="btn btn-secondary" style={{ padding: '6px 12px' }}>
-            Tutup
+          <button onClick={onClose} className="btn btn-secondary" style={{ padding: '6px 10px' }}>
+            <X size={16} />
           </button>
         </div>
 
-        {/* Method Switcher Tabs */}
+        {/* Tab Switcher */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: '8px',
-          background: 'rgba(255,255,255,0.04)',
-          padding: '6px',
-          borderRadius: '12px',
+          gap: '6px',
+          background: 'var(--bg-muted)',
+          padding: '4px',
+          borderRadius: 'var(--radius-md)',
           marginBottom: '20px'
         }}>
           <button
             onClick={() => { setActiveTab('GEO'); setResult(null); }}
             style={{
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: 'none',
-              background: activeTab === 'GEO' ? '#10B981' : 'transparent',
-              color: activeTab === 'GEO' ? '#04140D' : 'var(--text-main)',
-              fontWeight: 700,
+              background: activeTab === 'GEO' ? 'var(--bg-surface)' : 'transparent',
+              color: activeTab === 'GEO' ? 'var(--primary-text)' : 'var(--text-muted)',
+              fontWeight: 600,
+              fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer'
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: activeTab === 'GEO' ? 'var(--shadow-xs)' : 'none',
+              transition: 'all var(--transition-fast)'
             }}
           >
-            <MapPin size={18} />
-            <span>Geolocation + Smart Shift</span>
+            <MapPin size={16} />
+            Geolocation
           </button>
 
           <button
             onClick={() => { setActiveTab('QR'); setResult(null); }}
             style={{
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: 'none',
-              background: activeTab === 'QR' ? '#10B981' : 'transparent',
-              color: activeTab === 'QR' ? '#04140D' : 'var(--text-main)',
-              fontWeight: 700,
+              background: activeTab === 'QR' ? 'var(--bg-surface)' : 'transparent',
+              color: activeTab === 'QR' ? 'var(--primary-text)' : 'var(--text-muted)',
+              fontWeight: 600,
+              fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer'
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: activeTab === 'QR' ? 'var(--shadow-xs)' : 'none',
+              transition: 'all var(--transition-fast)'
             }}
           >
-            <QrCode size={18} />
-            <span>Scan Dynamic QR Kiosk</span>
+            <QrCode size={16} />
+            Scan QR Kiosk
           </button>
         </div>
 
-        {/* TAB 1: GEOLOCATION */}
+        {/* GEO Tab */}
         {activeTab === 'GEO' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Distance Simulation */}
             <div style={{
-              background: 'rgba(255,255,255,0.03)',
+              background: 'var(--bg-muted)',
               padding: '14px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.08)'
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)'
             }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10B981', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Navigation size={16} />
-                <span>Simulasi Koordinat GPS Ponsel (Haversine Check):</span>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Navigation size={14} color="var(--primary)" />
+                Simulasi Lokasi GPS
               </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => setSimulatedDistance('INSIDE')}
                   className="btn"
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: simulatedDistance === 'INSIDE' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255,255,255,0.05)',
-                    border: simulatedDistance === 'INSIDE' ? '1px solid #10B981' : '1px solid rgba(255,255,255,0.1)',
-                    color: simulatedDistance === 'INSIDE' ? '#6EE7B7' : 'var(--text-main)'
+                    fontSize: '0.8rem',
+                    background: simulatedDistance === 'INSIDE' ? 'var(--success-light)' : 'var(--bg-surface)',
+                    border: simulatedDistance === 'INSIDE' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-light)',
+                    color: simulatedDistance === 'INSIDE' ? 'var(--success-text)' : 'var(--text-secondary)'
                   }}
                 >
-                  📍 Dalam Radius Kantor (&lt; 100m)
+                  Dalam Radius (&lt; 100m)
                 </button>
                 <button
                   onClick={() => setSimulatedDistance('OUTSIDE')}
@@ -232,94 +227,63 @@ export default function CheckInModal({ onClose, onSuccess }) {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: simulatedDistance === 'OUTSIDE' ? 'rgba(244, 63, 94, 0.25)' : 'rgba(255,255,255,0.05)',
-                    border: simulatedDistance === 'OUTSIDE' ? '1px solid #F43F5E' : '1px solid rgba(255,255,255,0.1)',
-                    color: simulatedDistance === 'OUTSIDE' ? '#FDA4AF' : 'var(--text-main)'
+                    fontSize: '0.8rem',
+                    background: simulatedDistance === 'OUTSIDE' ? 'var(--danger-light)' : 'var(--bg-surface)',
+                    border: simulatedDistance === 'OUTSIDE' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-light)',
+                    color: simulatedDistance === 'OUTSIDE' ? 'var(--danger-text)' : 'var(--text-secondary)'
                   }}
                 >
-                  🚀 Luar Radius Kantor (&gt; 350m)
+                  Luar Radius (&gt; 350m)
                 </button>
               </div>
             </div>
 
-            {/* Biometric Face / Liveness Check */}
-            <div style={{
-              padding: '12px 14px',
-              borderRadius: '12px',
-              background: isBiometricVerified ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)',
-              border: isBiometricVerified ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
+            {/* Toggle Options */}
+            <div className="toggle-card" style={isBiometricVerified ? { borderColor: 'var(--primary)', background: 'var(--primary-soft)' } : {}}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <ScanFace size={20} color={isBiometricVerified ? '#10B981' : 'var(--text-muted)'} />
+                <ScanFace size={18} color={isBiometricVerified ? 'var(--primary)' : 'var(--text-muted)'} />
                 <div>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>Verifikasi Swafoto Biometrik (Liveness Check)</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    REQ-AUTH-04: Tambah skor keamanan dan anti-titip absen
-                  </div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>Verifikasi Biometrik</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Liveness check untuk keamanan tambahan</div>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={isBiometricVerified}
                 onChange={e => setIsBiometricVerified(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
               />
             </div>
 
-            {/* Offline-First Mode Toggle (USP-5) */}
-            <div style={{
-              padding: '12px 14px',
-              borderRadius: '12px',
-              background: isOfflineMode ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.03)',
-              border: isOfflineMode ? '1px solid #06B6D4' : '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
+            <div className="toggle-card" style={isOfflineMode ? { borderColor: 'var(--info-text)', background: 'var(--info-soft)' } : {}}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <WifiOff size={20} color={isOfflineMode ? '#06B6D4' : 'var(--text-muted)'} />
+                <WifiOff size={18} color={isOfflineMode ? 'var(--info-text)' : 'var(--text-muted)'} />
                 <div>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>Simulasi Kondisi Tanpa Internet (Offline-First Queue)</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    USP-5: Simpan ke antrean lokal & sinkron otomatis saat online
-                  </div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>Mode Offline</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Simpan lokal, sinkron saat online</div>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={isOfflineMode}
                 onChange={e => setIsOfflineMode(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--info-text)' }}
               />
             </div>
 
-            {/* Anti-Mock GPS Toggle */}
-            <div style={{
-              padding: '12px 14px',
-              borderRadius: '12px',
-              background: isMockGps ? 'rgba(244, 63, 94, 0.15)' : 'rgba(255,255,255,0.03)',
-              border: isMockGps ? '1px solid #F43F5E' : '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
+            <div className="toggle-card" style={isMockGps ? { borderColor: 'var(--danger)', background: 'var(--danger-soft)' } : {}}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <ShieldAlert size={20} color={isMockGps ? '#F43F5E' : 'var(--text-muted)'} />
+                <ShieldAlert size={18} color={isMockGps ? 'var(--danger-text)' : 'var(--text-muted)'} />
                 <div>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>Simulasi Aplikasi Fake GPS (Mock Location)</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    REQ-GEO-02: Uji penolakan otomatis & audit log alert
-                  </div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>Simulasi Fake GPS</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Uji penolakan otomatis mock location</div>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={isMockGps}
                 onChange={e => setIsMockGps(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--danger)' }}
               />
             </div>
 
@@ -327,38 +291,40 @@ export default function CheckInModal({ onClose, onSuccess }) {
               onClick={handleGeoCheckIn}
               disabled={loading}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '14px', marginTop: '6px' }}
+              style={{ width: '100%', padding: '12px', marginTop: '4px' }}
             >
-              {loading ? 'Memvalidasi Geolocation & Security...' : '🚀 Check-In Sekarang (Validasi GPS + Smart Shift)'}
+              {loading ? 'Memproses...' : 'Check-In via Geolocation'}
             </button>
           </div>
         )}
 
-        {/* TAB 2: DYNAMIC QR */}
+        {/* QR Tab */}
         {activeTab === 'QR' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{
-              background: 'rgba(255,255,255,0.03)',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.08)'
-            }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10B981', marginBottom: '8px' }}>
-                Skenario Pemindaian Kode QR Kiosk:
-              </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label className="form-label">Pilih Stasiun Kiosk</label>
+              <select value={qrStation} onChange={e => setQrStation(e.target.value)} className="form-select">
+                <option value="KIOSK-JKT-01">Lobby HQ Sudirman Tower</option>
+                <option value="KIOSK-BKS-01">Gudang Logistics Bekasi</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label">Simulasi Mode Scan</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => setQrScanMode('VALID')}
                   className="btn"
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: qrScanMode === 'VALID' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255,255,255,0.05)',
-                    border: qrScanMode === 'VALID' ? '1px solid #10B981' : '1px solid rgba(255,255,255,0.1)',
-                    color: qrScanMode === 'VALID' ? '#6EE7B7' : 'var(--text-main)'
+                    fontSize: '0.8rem',
+                    background: qrScanMode === 'VALID' ? 'var(--success-light)' : 'var(--bg-muted)',
+                    border: qrScanMode === 'VALID' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-light)',
+                    color: qrScanMode === 'VALID' ? 'var(--success-text)' : 'var(--text-secondary)'
                   }}
                 >
-                  🟢 Scan QR Live (&lt; 15s Valid)
+                  Token Valid (Real-Time)
                 </button>
                 <button
                   onClick={() => setQrScanMode('EXPIRED')}
@@ -366,12 +332,13 @@ export default function CheckInModal({ onClose, onSuccess }) {
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: qrScanMode === 'EXPIRED' ? 'rgba(244, 63, 94, 0.25)' : 'rgba(255,255,255,0.05)',
-                    border: qrScanMode === 'EXPIRED' ? '1px solid #F43F5E' : '1px solid rgba(255,255,255,0.1)',
-                    color: qrScanMode === 'EXPIRED' ? '#FDA4AF' : 'var(--text-main)'
+                    fontSize: '0.8rem',
+                    background: qrScanMode === 'EXPIRED' ? 'var(--danger-light)' : 'var(--bg-muted)',
+                    border: qrScanMode === 'EXPIRED' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-light)',
+                    color: qrScanMode === 'EXPIRED' ? 'var(--danger-text)' : 'var(--text-secondary)'
                   }}
                 >
-                  🔴 Scan Screenshot (&gt; 15s Expired)
+                  Token Kedaluwarsa
                 </button>
               </div>
             </div>
@@ -380,40 +347,45 @@ export default function CheckInModal({ onClose, onSuccess }) {
               onClick={handleQRScan}
               disabled={loading}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '14px', marginTop: '8px' }}
+              style={{ width: '100%', padding: '12px', marginTop: '4px' }}
             >
-              {loading ? 'Memindai QR & HMAC Signature...' : '📷 Pindai QR Code Layar Kiosk'}
+              {loading ? 'Memindai...' : 'Scan QR & Check-In'}
             </button>
           </div>
         )}
 
-        {/* RESULT FEEDBACK */}
+        {/* Result Display */}
         {result && (
           <div style={{
-            marginTop: '18px',
-            padding: '16px',
-            borderRadius: '12px',
-            background: result.success ? (result.is_offline ? 'rgba(6, 182, 212, 0.18)' : 'rgba(16, 185, 129, 0.15)') : 'rgba(244, 63, 94, 0.15)',
-            border: result.success ? (result.is_offline ? '1px solid #06B6D4' : '1px solid #10B981') : '1px solid #F43F5E',
+            marginTop: '16px',
+            padding: '14px 16px',
+            borderRadius: 'var(--radius-md)',
+            background: result.success ? 'var(--success-light)' : 'var(--danger-light)',
+            border: result.success ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '12px'
+            gap: '10px'
           }}>
             {result.success ? (
-              <CheckCircle2 size={24} color={result.is_offline ? '#06B6D4' : '#10B981'} style={{ flexShrink: 0 }} />
+              <CheckCircle2 size={18} color="var(--success-text)" style={{ marginTop: '1px', flexShrink: 0 }} />
             ) : (
-              <XCircle size={24} color="#F43F5E" style={{ flexShrink: 0 }} />
+              <XCircle size={18} color="var(--danger-text)" style={{ marginTop: '1px', flexShrink: 0 }} />
             )}
             <div>
-              <div style={{ fontWeight: 700, color: result.success ? (result.is_offline ? '#93C5FD' : '#6EE7B7') : '#FDA4AF' }}>
-                {result.success ? (result.is_offline ? 'Tersimpan di Antrean Offline (Offline-First)' : 'Kehadiran Sah Terverifikasi!') : 'Check-In Ditolak Sistem!'}
+              <div style={{
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                color: result.success ? 'var(--success-text)' : 'var(--danger-text)',
+                marginBottom: '2px'
+              }}>
+                {result.success ? 'Berhasil!' : 'Gagal'}
               </div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                 {result.message}
               </div>
-              {result.trust_score !== undefined && (
-                <div style={{ fontSize: '0.78rem', color: '#10B981', marginTop: '6px', fontWeight: 600 }}>
-                  Attendance Trust Score: {result.trust_score}%
+              {result.trust_score && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Trust Score: <strong>{result.trust_score}%</strong>
                 </div>
               )}
             </div>

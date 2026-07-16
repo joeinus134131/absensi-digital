@@ -10,7 +10,9 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   Clock, 
-  Layers 
+  FileText,
+  Activity,
+  CalendarClock
 } from 'lucide-react';
 
 export default function Sidebar({ activePage, setActivePage }) {
@@ -19,120 +21,156 @@ export default function Sidebar({ activePage, setActivePage }) {
 
   const role = user.role;
 
-  // Build menu items based on ACL RBAC Matrix (BRD Section 5.2)
   const menuItems = [
     {
       id: 'DASHBOARD',
       label: role === 'EMPLOYEE' ? 'Portal Karyawan' :
-             role === 'MANAGER' ? 'Dasbor Manajer & Tim' :
-             role === 'HR_ADMIN' ? 'Dasbor HR & Manajemen Tenant' :
-             role === 'PAYROLL_AUDITOR' ? 'Pusat Audit & Payroll' : 'Platform Super Admin',
+             role === 'MANAGER' ? 'Dasbor Tim' :
+             role === 'HR_ADMIN' ? 'Dasbor HR' :
+             role === 'PAYROLL_AUDITOR' ? 'Audit & Payroll' : 'Super Admin',
       icon: Home,
       roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN', 'PAYROLL_AUDITOR', 'SUPER_ADMIN']
     },
     {
+      id: 'MY_REQUESTS',
+      label: 'Pengajuan Saya',
+      icon: FileText,
+      roles: ['EMPLOYEE']
+    },
+    {
       id: 'HR_MASTER',
-      label: 'Master Karyawan & Cabang',
+      label: 'Master Karyawan',
       icon: Users,
       roles: ['HR_ADMIN', 'SUPER_ADMIN']
     },
     {
       id: 'GEOFENCE_CONFIG',
-      label: 'Konfigurasi Geofence GPS',
+      label: 'Konfigurasi Geofence',
       icon: MapPin,
       roles: ['HR_ADMIN', 'SUPER_ADMIN']
     },
     {
+      id: 'SHIFT_MANAGEMENT',
+      label: 'Shift & Roster',
+      icon: CalendarClock,
+      roles: ['HR_ADMIN', 'SUPER_ADMIN', 'MANAGER']
+    },
+    {
       id: 'KIOSK',
-      label: 'Layar Kiosk QR Kantor (Live)',
+      label: 'QR Kiosk Station',
       icon: QrCode,
       roles: ['EMPLOYEE', 'MANAGER', 'HR_ADMIN', 'SUPER_ADMIN']
     },
     {
       id: 'APPROVALS',
-      label: 'Persetujuan Izin & Cuti',
+      label: 'Persetujuan & Cuti',
       icon: CheckCircle2,
       roles: ['MANAGER', 'HR_ADMIN']
     },
     {
       id: 'PAYROLL_EXPORT',
-      label: 'Ekspor Payroll Siap Pakai',
+      label: 'Ekspor Payroll',
       icon: FileSpreadsheet,
       roles: ['HR_ADMIN', 'PAYROLL_AUDITOR', 'SUPER_ADMIN']
+    },
+    {
+      id: 'AUDIT_TRAIL',
+      label: 'Audit Trail',
+      icon: Activity,
+      roles: ['HR_ADMIN', 'SUPER_ADMIN', 'PAYROLL_AUDITOR']
     }
   ];
 
   const allowedItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
-    <aside className="glass-card" style={{
-      width: '260px',
-      minWidth: '260px',
-      padding: '20px 14px',
+    <aside style={{
+      width: '240px',
+      minWidth: '240px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
-      height: 'fit-content'
+      gap: '4px',
+      height: 'fit-content',
+      position: 'sticky',
+      top: '80px'
     }}>
+      {/* Navigation Section */}
       <div style={{
-        padding: '0 12px 12px 12px',
-        fontSize: '0.72rem',
-        fontWeight: 700,
-        color: 'var(--text-muted)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.08em',
-        borderBottom: '1px solid rgba(255,255,255,0.06)'
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-light)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '16px 10px',
+        boxShadow: 'var(--shadow-xs)'
       }}>
-        Menu Navigasi ({role})
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-        {allowedItems.map(item => {
-          const Icon = item.icon;
-          const isActive = activePage === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActivePage(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                border: 'none',
-                background: isActive ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 182, 212, 0.15))' : 'transparent',
-                color: isActive ? '#10B981' : 'var(--text-main)',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s ease',
-                boxShadow: isActive ? '0 0 15px rgba(16, 185, 129, 0.2)' : 'none'
-              }}
-            >
-              <Icon size={19} color={isActive ? '#10B981' : 'var(--text-muted)'} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ACL Security Badge info box */}
-      <div style={{
-        marginTop: '24px',
-        padding: '14px',
-        borderRadius: '12px',
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        fontSize: '0.78rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10B981', fontWeight: 600, marginBottom: '6px' }}>
-          <ShieldCheck size={16} />
-          <span>ACL Active Control</span>
+        <div style={{
+          padding: '0 12px 10px 12px',
+          fontSize: '0.68rem',
+          fontWeight: 700,
+          color: 'var(--text-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em'
+        }}>
+          Navigasi
         </div>
-        <p style={{ color: 'var(--text-muted)', lineHeight: 1.4 }}>
-          Akses modul dan tombol aksi disesuaikan secara dinamis dengan peran pengguna sesuai standar keamanan WajibAbsen.
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {allowedItems.map(item => {
+            const Icon = item.icon;
+            const isActive = activePage === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: 'none',
+                  background: isActive ? 'var(--primary-light)' : 'transparent',
+                  color: isActive ? 'var(--primary-text)' : 'var(--text-secondary)',
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all var(--transition-fast)',
+                  width: '100%'
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'var(--bg-muted)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                <Icon size={18} color={isActive ? 'var(--primary)' : 'var(--text-muted)'} strokeWidth={isActive ? 2.2 : 1.8} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Security Info */}
+      <div style={{
+        marginTop: '8px',
+        padding: '14px',
+        borderRadius: 'var(--radius-lg)',
+        background: 'var(--primary-light)',
+        border: '1px solid rgba(79, 107, 246, 0.12)',
+        fontSize: '0.75rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary-text)', fontWeight: 600, marginBottom: '6px' }}>
+          <ShieldCheck size={14} />
+          <span>Akses Terkontrol</span>
+        </div>
+        <p style={{ color: 'var(--text-muted)', lineHeight: 1.5, fontSize: '0.72rem' }}>
+          Menu disesuaikan dengan peran Anda secara otomatis berdasarkan kebijakan keamanan.
         </p>
       </div>
     </aside>

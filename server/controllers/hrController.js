@@ -44,5 +44,57 @@ export const updateBranchGeofence = (req, res) => {
 export const resetUserDevice = (req, res) => {
   const { user_id } = req.body;
   const updated = db.update('users', user_id, { device_fingerprint: null });
+
+  db.insert('audit_logs', {
+    actor_id: 'system',
+    actor_role: 'HR_ADMIN',
+    actor_name: 'HR Admin',
+    action: 'RESET_DEVICE_BINDING',
+    target_type: 'USER',
+    details: `Reset device binding untuk user ${user_id}`,
+    timestamp: new Date().toISOString()
+  });
+
   res.json({ success: true, message: 'Device Binding untuk karyawan berhasil direset. Karyawan kini dapat mengikat perangkat baru.', user: updated });
+};
+
+export const createShift = (req, res) => {
+  const { name, start_time, end_time, grace_period_minutes, is_overnight, flexible_hours, branch_id } = req.body;
+  const newShift = db.insert('shifts', {
+    name,
+    start_time,
+    end_time,
+    grace_period_minutes: Number(grace_period_minutes) || 15,
+    is_overnight: !!is_overnight,
+    flexible_hours: !!flexible_hours,
+    branch_id: branch_id || 'branch_hq'
+  });
+
+  db.insert('audit_logs', {
+    actor_id: 'system',
+    actor_role: 'HR_ADMIN',
+    actor_name: 'HR Admin',
+    action: 'CONFIG_CREATE_SHIFT',
+    target_type: 'SHIFT',
+    details: `Shift baru dibuat: ${name} (${start_time} - ${end_time})`,
+    timestamp: new Date().toISOString()
+  });
+
+  res.json({ success: true, message: 'Shift baru berhasil dibuat.', shift: newShift });
+};
+
+export const getAuditLogs = (req, res) => {
+  const logs = db.getTable('audit_logs');
+  const users = db.getTable('users');
+
+  // Enrich with actor names
+  const enriched = logs.map(log => {
+    const actor = users.find(u => u.id === log.actor_id);
+    return {
+      ...log,
+      actor_name: log.actor_name || (actor ? actor.full_name : log.actor_id)
+    };
+  }).reverse();
+
+  res.json({ success: true, logs: enriched });
 };
